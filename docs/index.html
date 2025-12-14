@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>simple_mq - Message Queue for Eiffel</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <img src="images/logo.png" alt="simple_* logo" class="logo">
+        </div>
+        <h1>simple_mq</h1>
+        <p class="tagline">Message Queue for Eiffel</p>
+        <div class="badges">
+            <span class="badge badge-version">v1.0.0</span>
+            <span class="badge badge-license">MIT</span>
+        </div>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="#overview">Overview</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#installation">Installation</a></li>
+            <li><a href="https://github.com/simple-eiffel/simple_mq">GitHub</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section id="overview">
+            <h2>Overview</h2>
+            <p>
+                <strong>simple_mq</strong> provides message queue functionality for Eiffel applications
+                including Redis Streams integration, publish/subscribe patterns, and asynchronous message handling.
+            </p>
+            <p>Part of the <a href="https://github.com/simple-eiffel">Simple Eiffel</a> ecosystem.</p>
+
+            <div class="quick-start">
+                <h3>Quick Start</h3>
+                <pre><code><span class="keyword">local</span>
+    mq: <span class="type">SIMPLE_MQ</span>
+    msg: <span class="type">SIMPLE_MQ_MESSAGE</span>
+<span class="keyword">do</span>
+    <span class="keyword">create</span> mq.make
+    <span class="keyword">create</span> msg.make (<span class="string">"user.created"</span>, <span class="string">"{%"id%": 123}"</span>)
+    mq.publish (msg)
+<span class="keyword">end</span></code></pre>
+            </div>
+        </section>
+
+        <section id="features">
+            <h2>Features</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>Message Queues</h4>
+                    <p>In-memory and Redis-backed queue implementations</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Pub/Sub</h4>
+                    <p>Topic-based publish/subscribe messaging patterns</p>
+                </div>
+                <div class="feature-card">
+                    <h4>Structured Messages</h4>
+                    <p>Messages with metadata, timestamps, and correlation IDs</p>
+                </div>
+                <div class="feature-card">
+                    <h4>SCOOP Compatible</h4>
+                    <p>Thread-safe concurrent message handling</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="installation">
+            <h2>Installation</h2>
+            <pre><code><span class="comment"># Set environment variable</span>
+export SIMPLE_MQ=/path/to/simple_mq
+
+<span class="comment"># Add to ECF</span>
+&lt;library name="simple_mq" location="$SIMPLE_MQ/simple_mq.ecf"/&gt;</code></pre>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 simple_* ecosystem. MIT License.</p>
+        <p>
+            <a href="https://github.com/simple-eiffel/simple_mq">GitHub</a> |
+            <a href="https://simple-eiffel.github.io">Documentation</a>
+        </p>
+    </footer>
+</body>
+</html>
