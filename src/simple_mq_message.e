@@ -205,12 +205,10 @@ feature {NONE} -- Implementation
 	current_timestamp: INTEGER_64
 			-- Current Unix timestamp in milliseconds.
 		local
-			l_time: DATE_TIME
-			l_epoch: DATE_TIME
+			l_dt: SIMPLE_DATE_TIME
 		do
-			create l_time.make_now_utc
-			create l_epoch.make (1970, 1, 1, 0, 0, 0)
-			Result := (l_time.definite_duration (l_epoch).seconds_count * 1000).to_integer_64
+			create l_dt.make_now
+			Result := l_dt.to_timestamp * 1000
 		end
 
 	escaped_json (s: READABLE_STRING_8): STRING_8
