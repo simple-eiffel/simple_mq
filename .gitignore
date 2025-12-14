@@ -1,0 +1,9 @@
+# EiffelStudio generated
+EIFGENs/
+
+# Backup files
+*.bak
+*~
+
+# IDE settings
+.settings/
