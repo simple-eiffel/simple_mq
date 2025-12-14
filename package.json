@@ -1,0 +1,9 @@
+{
+  "name": "simple_mq",
+  "version": "0.1.0",
+  "description": "Simple Message Queue - Redis Streams, pub/sub, async messaging patterns for Eiffel",
+  "author": "Larry Rix",
+  "license": "MIT",
+  "category": "networking",
+  "keywords": ["message-queue", "redis", "pubsub", "async"]
+}
