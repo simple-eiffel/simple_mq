@@ -23,6 +23,48 @@ Part of the [Simple Eiffel](https://github.com/simple-eiffel) ecosystem.
 
 simple_mq provides a clean API for message queue operations including Redis Streams integration, publish/subscribe patterns, and asynchronous message handling. Built with Design by Contract and SCOOP compatibility for concurrent applications.
 
+## Quick Start (Zero-Configuration)
+
+Use `SIMPLE_MQ_QUICK` for the simplest possible messaging:
+
+```eiffel
+local
+    mq: SIMPLE_MQ_QUICK
+    message: detachable STRING
+do
+    create mq.make
+
+    -- Simple queue operations (point-to-point)
+    mq.send ("tasks", "Process order #123")
+    mq.send ("tasks", "Process order #124")
+
+    -- Receive messages (FIFO)
+    message := mq.receive ("tasks")  -- "Process order #123"
+
+    -- Peek without removing
+    message := mq.peek ("tasks")  -- "Process order #124"
+
+    -- Check queue status
+    if mq.has_messages ("tasks") then
+        print ("Pending: " + mq.queue_size ("tasks").out)
+    end
+
+    -- Batch operations
+    mq.send_all ("emails", <<"alice@x.com", "bob@x.com", "carol@x.com">>)
+    across mq.receive_all ("emails", 10) as msg loop
+        print ("Email: " + msg)
+    end
+
+    -- Pub/Sub (broadcast to all subscribers)
+    mq.publish ("events", "{%"type%": %"user.created%"}")
+
+    -- Clear queue
+    mq.clear_queue ("tasks")
+end
+```
+
+## Standard API (Full Control)
+
 ```eiffel
 -- Publish a message
 local
