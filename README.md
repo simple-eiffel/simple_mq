@@ -87,14 +87,14 @@ end
 
 ## Installation
 
-1. Set environment variable:
+1. Set environment variable (one-time setup for all simple_* libraries):
 ```bash
-export SIMPLE_MQ=/path/to/simple_mq
+export SIMPLE_EIFFEL=/d/prod
 ```
 
 2. Add to ECF:
 ```xml
-<library name="simple_mq" location="$SIMPLE_MQ/simple_mq.ecf"/>
+<library name="simple_mq" location="$SIMPLE_EIFFEL/simple_mq/simple_mq.ecf"/>
 ```
 
 ## Dependencies
