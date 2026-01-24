@@ -1,0 +1,410 @@
+note
+	description: "[
+				Message Queue facade - factory for queues, topics, and messages.
+		
+				Provides a unified API for message queue operations:
+				- In-memory queues for single-process use
+				- Redis-backed queues for distributed/persistent use
+				- Pub/Sub topics for broadcast messaging
+		
+				Usage:
+					mq := create {SIMPLE_MQ}.make
+		
+					-- Create messages
+					msg := mq.new_message ("Hello, World!")
+					msg.set_header ("type", "greeting")
+		
+					-- In-memory queue
+					queue := mq.new_queue ("tasks")
+					queue.enqueue (msg)
+		
+					-- Pub/Sub
+					topic := mq.new_topic ("events.user.created")
+					topic.subscribe (handler)
+					topic.publish (msg)
+		
+					-- Redis-backed (distributed)
+					redis_queue := mq.new_redis_queue ("jobs", redis)
+					redis_queue.enqueue (msg)
+	]"
+	author: "Larry Rix"
+	date: "$Date$"
+	revision: "$Revision$"
+
+class interface
+	SIMPLE_MQ
+
+create 
+	make
+			-- Initialize message queue facade.
+
+feature -- Access
+
+	generating_type: TYPE [detachable SIMPLE_MQ]
+			-- Type of current object
+			-- (type of which it is a direct instance)
+			-- (from ANY)
+		ensure -- from ANY
+			generating_type_not_void: Result /= Void
+
+	generator: STRING_8
+			-- Name of current object's generating class
+			-- (base class of the type of which it is a direct instance)
+			-- (from ANY)
+		ensure -- from ANY
+			generator_not_void: Result /= Void
+			generator_not_empty: not Result.is_empty
+	
+feature -- Comparison
+
+	frozen deep_equal (a: detachable ANY; b: like arg #1): BOOLEAN
+			-- Are `a` and `b` either both void
+			-- or attached to isomorphic object structures?
+			-- (from ANY)
+		ensure -- from ANY
+			instance_free: class
+			shallow_implies_deep: standard_equal (a, b) implies Result
+			both_or_none_void: (a = Void) implies (Result = (b = Void))
+			same_type: (Result and (a /= Void)) implies (b /= Void and then a.same_type (b))
+			symmetric: Result implies deep_equal (b, a)
+
+	frozen equal (a: detachable ANY; b: like arg #1): BOOLEAN
+			-- Are `a` and `b` either both void or attached
+			-- to objects considered equal?
+			-- (from ANY)
+		ensure -- from ANY
+			instance_free: class
+			definition: Result = (a = Void and b = Void) or else ((a /= Void and b /= Void) and then a.is_equal (b))
+
+	frozen is_deep_equal alias "≡≡≡" (other: SIMPLE_MQ): BOOLEAN
+			-- Are `Current` and `other` attached to isomorphic object structures?
+			-- (from ANY)
+		require -- from ANY
+			other_not_void: other /= Void
+		ensure -- from ANY
+			shallow_implies_deep: standard_is_equal (other) implies Result
+			same_type: Result implies same_type (other)
+			symmetric: Result implies other.is_deep_equal (Current)
+
+	is_equal (other: SIMPLE_MQ): BOOLEAN
+			-- Is `other` attached to an object considered
+			-- equal to current object?
+			-- (from ANY)
+		require -- from ANY
+			other_not_void: other /= Void
+		ensure -- from ANY
+			symmetric: Result implies other ~ Current
+			consistent: standard_is_equal (other) implies Result
+
+	frozen standard_equal (a: detachable ANY; b: like arg #1): BOOLEAN
+			-- Are `a` and `b` either both void or attached to
+			-- field-by-field identical objects of the same type?
+			-- Always uses default object comparison criterion.
+			-- (from ANY)
+		ensure -- from ANY
+			instance_free: class
+			definition: Result = (a = Void and b = Void) or else ((a /= Void and b /= Void) and then a.standard_is_equal (b))
+
+	frozen standard_is_equal alias "≜" (other: SIMPLE_MQ): BOOLEAN
+			-- Is `other` attached to an object of the same type
+			-- as current object, and field-by-field identical to it?
+			-- (from ANY)
+		require -- from ANY
+			other_not_void: other /= Void
+		ensure -- from ANY
+			same_type: Result implies same_type (other)
+			symmetric: Result implies other.standard_is_equal (Current)
+	
+feature -- Status report
+
+	conforms_to (other: ANY): BOOLEAN
+			-- Does type of current object conform to type
+			-- of `other` (as per Eiffel: The Language, chapter 13)?
+			-- (from ANY)
+		require -- from ANY
+			other_not_void: other /= Void
+
+	same_type (other: ANY): BOOLEAN
+			-- Is type of current object identical to type of `other`?
+			-- (from ANY)
+		require -- from ANY
+			other_not_void: other /= Void
+		ensure -- from ANY
+			definition: Result = (conforms_to (other) and other.conforms_to (Current))
+	
+feature -- Duplication
+
+	copy (other: SIMPLE_MQ)
+			-- Update current object using fields of object attached
+			-- to `other`, so as to yield equal objects.
+			-- (from ANY)
+		require -- from ANY
+			other_not_void: other /= Void
+			type_identity: same_type (other)
+		ensure -- from ANY
+			is_equal: Current ~ other
+
+	frozen deep_copy (other: SIMPLE_MQ)
+			-- Effect equivalent to that of:
+			--		`copy` (`other` . `deep_twin`)
+			-- (from ANY)
+		require -- from ANY
+			other_not_void: other /= Void
+		ensure -- from ANY
+			deep_equal: deep_equal (Current, other)
+
+	frozen deep_twin: SIMPLE_MQ
+			-- New object structure recursively duplicated from Current.
+			-- (from ANY)
+		ensure -- from ANY
+			deep_twin_not_void: Result /= Void
+			deep_equal: deep_equal (Current, Result)
+
+	frozen standard_copy (other: SIMPLE_MQ)
+			-- Copy every field of `other` onto corresponding field
+			-- of current object.
+			-- (from ANY)
+		require -- from ANY
+			other_not_void: other /= Void
+			type_identity: same_type (other)
+		ensure -- from ANY
+			is_standard_equal: standard_is_equal (other)
+
+	frozen standard_twin: SIMPLE_MQ
+			-- New object field-by-field identical to `other`.
+			-- Always uses default copying semantics.
+			-- (from ANY)
+		ensure -- from ANY
+			standard_twin_not_void: Result /= Void
+			equal: standard_equal (Result, Current)
+
+	frozen twin: SIMPLE_MQ
+			-- New object equal to `Current`
+			-- `twin` calls `copy`; to change copying/twinning semantics, redefine `copy`.
+			-- (from ANY)
+		ensure -- from ANY
+			twin_not_void: Result /= Void
+			is_equal: Result ~ Current
+	
+feature -- Basic operations
+
+	frozen default: detachable SIMPLE_MQ
+			-- Default value of object's type
+			-- (from ANY)
+
+	frozen default_pointer: POINTER
+			-- Default value of type `POINTER`
+			-- (Avoid the need to write `p`.`default` for
+			-- some `p` of type `POINTER`.)
+			-- (from ANY)
+		ensure -- from ANY
+			instance_free: class
+
+	default_rescue
+			-- Process exception for routines with no Rescue clause.
+			-- (Default: do nothing.)
+			-- (from ANY)
+
+	frozen do_nothing
+			-- Execute a null action.
+			-- (from ANY)
+		ensure -- from ANY
+			instance_free: class
+	
+feature -- Convenience: Quick Send
+
+	publish (a_topic_name, a_payload: READABLE_STRING_8)
+			-- Quick publish: create message and publish to named topic.
+		require
+			topic_name_not_empty: not a_topic_name.is_empty
+			topic_registered: topic (a_topic_name) /= Void
+
+	receive (a_queue_name: READABLE_STRING_8): detachable SIMPLE_MQ_MESSAGE
+			-- Quick receive: dequeue from named queue.
+		require
+			queue_name_not_empty: not a_queue_name.is_empty
+			queue_registered: queue (a_queue_name) /= Void
+
+	send (a_queue_name, a_payload: READABLE_STRING_8)
+			-- Quick send: create message and enqueue to named queue.
+		require
+			queue_name_not_empty: not a_queue_name.is_empty
+			queue_registered: queue (a_queue_name) /= Void
+	
+feature -- Message Factory
+
+	new_message (a_payload: READABLE_STRING_8): SIMPLE_MQ_MESSAGE
+			-- Create new message with payload.
+		require
+			payload_not_void: a_payload /= Void
+		ensure
+			message_created: Result /= Void
+			payload_set: Result.payload.same_string (a_payload)
+
+	new_message_with_id (a_id, a_payload: READABLE_STRING_8): SIMPLE_MQ_MESSAGE
+			-- Create new message with specific ID.
+		require
+			id_not_empty: not a_id.is_empty
+		ensure
+			message_created: Result /= Void
+			id_set: Result.id.same_string (a_id)
+	
+feature -- Named Queue/Topic Registry
+
+	queue (a_name: READABLE_STRING_8): detachable SIMPLE_MQ_QUEUE
+			-- Get registered queue by name.
+		require
+			name_not_empty: not a_name.is_empty
+
+	register_queue (a_queue: SIMPLE_MQ_QUEUE)
+			-- Register queue for lookup by name.
+		require
+			queue_attached: a_queue /= Void
+		ensure
+			registered: queues.has (a_queue.name)
+
+	register_topic (a_topic: SIMPLE_MQ_TOPIC)
+			-- Register topic for lookup by name.
+		require
+			topic_attached: a_topic /= Void
+		ensure
+			registered: topics.has (a_topic.name)
+
+	topic (a_name: READABLE_STRING_8): detachable SIMPLE_MQ_TOPIC
+			-- Get registered topic by name.
+		require
+			name_not_empty: not a_name.is_empty
+
+	topics_matching (a_pattern: READABLE_STRING_8): ARRAYED_LIST [SIMPLE_MQ_TOPIC]
+			-- Get all registered topics matching pattern.
+			-- Supports wildcards: * (single level), # (multi-level)
+		require
+			pattern_not_empty: not a_pattern.is_empty
+	
+feature -- Output
+
+	Io: STD_FILES
+			-- Handle to standard file setup
+			-- (from ANY)
+		ensure -- from ANY
+			instance_free: class
+			io_not_void: Result /= Void
+
+	out: STRING_8
+			-- New string containing terse printable representation
+			-- of current object
+			-- (from ANY)
+		ensure -- from ANY
+			out_not_void: Result /= Void
+
+	print (o: detachable ANY)
+			-- Write terse external representation of `o`
+			-- on standard output.
+			-- (from ANY)
+		ensure -- from ANY
+			instance_free: class
+
+	frozen tagged_out: STRING_8
+			-- New string containing terse printable representation
+			-- of current object
+			-- (from ANY)
+		ensure -- from ANY
+			tagged_out_not_void: Result /= Void
+	
+feature -- Platform
+
+	Operating_environment: OPERATING_ENVIRONMENT
+			-- Objects available from the operating system
+			-- (from ANY)
+		ensure -- from ANY
+			instance_free: class
+			operating_environment_not_void: Result /= Void
+	
+feature -- Queue Factory (In-Memory)
+
+	new_priority_queue (a_name: READABLE_STRING_8): SIMPLE_MQ_QUEUE
+			-- Create new priority queue (higher priority dequeued first).
+		require
+			name_not_empty: not a_name.is_empty
+		ensure
+			queue_created: Result /= Void
+			is_priority: Result.is_priority_queue
+
+	new_queue (a_name: READABLE_STRING_8): SIMPLE_MQ_QUEUE
+			-- Create new in-memory queue.
+		require
+			name_not_empty: not a_name.is_empty
+		ensure
+			queue_created: Result /= Void
+			empty: Result.is_empty
+
+	new_queue_with_capacity (a_name: READABLE_STRING_8; a_max_size: INTEGER_32): SIMPLE_MQ_QUEUE
+			-- Create new in-memory queue with maximum capacity.
+		require
+			name_not_empty: not a_name.is_empty
+			positive_size: a_max_size > 0
+		ensure
+			queue_created: Result /= Void
+			max_size_set: Result.max_size = a_max_size
+	
+feature -- Redis Queue Factory (Distributed)
+
+	new_redis_queue (a_name: READABLE_STRING_8; a_redis: SIMPLE_REDIS): SIMPLE_MQ_REDIS_QUEUE
+			-- Create Redis-backed queue.
+		require
+			name_not_empty: not a_name.is_empty
+			redis_attached: a_redis /= Void
+		ensure
+			queue_created: Result /= Void
+
+	new_redis_queue_blocking (a_name: READABLE_STRING_8; a_redis: SIMPLE_REDIS; a_timeout: INTEGER_32): SIMPLE_MQ_REDIS_QUEUE
+			-- Create Redis-backed queue with blocking dequeue.
+		require
+			name_not_empty: not a_name.is_empty
+			redis_attached: a_redis /= Void
+			positive_timeout: a_timeout > 0
+		ensure
+			queue_created: Result /= Void
+			timeout_set: Result.blocking_timeout = a_timeout
+	
+feature -- Statistics
+
+	registered_queue_count: INTEGER_32
+			-- Number of registered queues.
+
+	registered_topic_count: INTEGER_32
+			-- Number of registered topics.
+	
+feature -- Topic Factory (Pub/Sub)
+
+	new_topic (a_name: READABLE_STRING_8): SIMPLE_MQ_TOPIC
+			-- Create new pub/sub topic.
+		require
+			name_not_empty: not a_name.is_empty
+		ensure
+			topic_created: Result /= Void
+			no_subscribers: Result.subscriber_count = 0
+
+	new_topic_with_history (a_name: READABLE_STRING_8; a_history_size: INTEGER_32): SIMPLE_MQ_TOPIC
+			-- Create topic with message history retention.
+		require
+			name_not_empty: not a_name.is_empty
+			positive_history: a_history_size > 0
+		ensure
+			topic_created: Result /= Void
+			history_enabled: Result.history_size = a_history_size
+	
+invariant
+	queues_attached: queues /= Void
+	topics_attached: topics /= Void
+
+		-- from ANY
+	reflexive_equality: standard_is_equal (Current)
+	reflexive_conformance: conforms_to (Current)
+
+note
+	copyright: "Copyright (c) 2025, Larry Rix"
+	license: "MIT License"
+
+end -- class SIMPLE_MQ
+
